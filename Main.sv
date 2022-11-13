@@ -1,7 +1,5 @@
 module Main(
-    input [11:0] memoryAddress,
-    input [31:0] writeData,
-    input readEnable,writeEnable
+    output integer readhit,readmiss,writehit,writemiss
 );
 
 reg[6:0] tagArrayInCache [7:0][3:0]; //5 bits for address + 1 dirty bit(5) + 1 valid bit(6)
@@ -12,7 +10,9 @@ integer Memory[255:0] [15:0];
 // 4096 bytes of memory, each block is of size 16 bytes.
 integer counter[7:0][3:0];
 reg hitmiss;
-
+reg [11:0] memoryAddress;
+reg [31:0] writeData;
+reg readEnable, writeEnable;
 // reg [11:0] memoryAddress=12'b000000100010;//Memory[2][2]
 // Memory[2][2]=14;
 // integer writeData;
@@ -21,6 +21,8 @@ reg[4:0] tagNumber;
 reg[4:0] hittag;
 reg[6:0] temp;
 integer set_number;
+integer statusi;
+integer z;
 integer offset,way_number;
 integer blockNumberInMemory;
 integer missmaxcount;
@@ -28,11 +30,13 @@ integer addressToMemory;
 integer empty;
 integer data;
 integer position;
-integer readmiss;
-integer readhit;
-integer writehit;
-integer writemiss;
+// integer readmiss;
+// integer readhit;
+// integer writehit;
+// integer writemiss;
 integer way_number_temp;
+integer file;
+reg integer hitrate;
 
 
 //setting initial values
@@ -41,6 +45,7 @@ initial begin
     readhit=0;
     writehit=0;
     writemiss=0;
+    file = $fopen("result.txt", "r");
     for(integer i=0; i<8; i=i+1) begin
         for(integer j=0; j<4;j++) begin
             tagArrayInCache[i][j]=7'b0;
@@ -69,6 +74,10 @@ always @* begin
 
 //checking hit miss
 // reg[4:0] tagNumber;
+for (integer z = 0; z<1000; z = z + 1 ) begin
+
+    statusi = $fscanf(file, "%b%b%b \n", memoryAddress[11:0], writeData[15:0], readEnable);
+    writeEnable = ~readEnable;
 tagNumber=memoryAddress [11:7];
 // reg[4:0] hittag;
 set_number=memoryAddress[6]*4+memoryAddress[5]*2+memoryAddress[4];
@@ -155,6 +164,11 @@ else begin//for miss
         // way_number=postion;        
         
 end
+end
+$fclose(file);
 
+
+hitrate = (readhit + writehit)*100/(readhit + writehit + readmiss + writemiss);
+$display("Hitrate: ", hitrate, "%");
 end
 endmodule
